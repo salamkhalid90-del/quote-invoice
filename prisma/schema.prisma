@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  PARTIALLY_PAID
+}
+
+model CompanySetting {
+  id                 Int      @id @default(1)
+  name               String   @default("Smart Engineering Company")
+  logoUrl            String?
+  watermarkLogoUrl   String?
+  address            String   @default("Baghdad, Iraq")
+  phones             String   @default("+964 000 000 0000")
+  email              String   @default("info@example.com")
+  website            String?
+  defaultCurrency    String   @default("IQD")
+  defaultMarkup      Float    @default(20)
+  defaultTerms       String   @default("الأسعار لا تشمل الأعمال غير المذكورة.\nأي تغيير في المخططات يعتبر كلفة إضافية.\nصلاحية العرض حسب التاريخ المذكور.\nالضمان حسب شروط الشركة المصنعة والتنفيذ.")
+  defaultPaymentPlan String   @default("50% عند المباشرة\n30% بعد التأسيس أو التوريد\n20% عند التسليم")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model PartnerCompany {
+  id        Int      @id @default(autoincrement())
+  name      String
+  logoUrl   String
+  website   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id           Int       @id @default(autoincrement())
+  name         String
+  phone        String?
+  address      String?
+  projectName  String?
+  notes        String?
+  quotes       Quote[]
+  invoices     Invoice[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Material {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  category            String
+  brand               String?
+  model               String?
+  cost                Float    @default(0)
+  defaultSellingPrice Float    @default(0)
+  supplier            String?
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Quote {
+  id                Int         @id @default(autoincrement())
+  quoteNo           String      @unique
+  documentTitle     String      @default("كوتيشن")
+  issueDate         DateTime
+  expiryDate        DateTime?
+  status            QuoteStatus @default(DRAFT)
+  clientId          Int
+  client            Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectName       String?
+  projectLocation   String?
+  workDescription   String?
+  currency          String      @default("IQD")
+  discount          Float       @default(0)
+  taxRate           Float       @default(0)
+  advancePayment    Float       @default(0)
+  paymentPlan       String?
+  terms             String?
+  notes             String?
+  showItemPrices    Boolean     @default(true)
+  showItemTotals    Boolean     @default(true)
+  showDiscount      Boolean     @default(true)
+  showTax           Boolean     @default(true)
+  showGrandTotal    Boolean     @default(true)
+  showAdvancePayment Boolean    @default(true)
+  showPaymentPlan   Boolean     @default(true)
+  showTerms         Boolean     @default(true)
+  showCostProfit    Boolean     @default(false)
+  items             QuoteItem[]
+  invoice           Invoice?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model QuoteItem {
+  id          Int      @id @default(autoincrement())
+  quoteId     Int
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  sortOrder   Int
+  category    String
+  description String
+  qty         Float    @default(1)
+  unit        String   @default("pcs")
+  unitPrice   Float    @default(0)
+  markup      Float    @default(0)
+  cost        Float    @default(0)
+  notes       String?
+}
+
+model Invoice {
+  id              Int           @id @default(autoincrement())
+  invoiceNo       String        @unique
+  issueDate       DateTime
+  dueDate         DateTime?
+  status          InvoiceStatus @default(UNPAID)
+  clientId        Int
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quoteId         Int?          @unique
+  quote           Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  projectName     String?
+  projectLocation String?
+  workDescription String?
+  currency        String        @default("IQD")
+  discount        Float         @default(0)
+  taxRate         Float         @default(0)
+  items           InvoiceItem[]
+  payments        Payment[]
+  terms           String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  sortOrder   Int
+  category    String
+  description String
+  qty         Float   @default(1)
+  unit        String  @default("pcs")
+  unitPrice   Float   @default(0)
+  markup      Float   @default(0)
+  cost        Float   @default(0)
+  notes       String?
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  invoiceId Int
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  paidAt    DateTime
+  amount    Float
+  notes     String?
+  createdAt DateTime @default(now())
+}
