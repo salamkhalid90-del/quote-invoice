@@ -5,3 +5,5 @@ coverage
 .env
 *.db
 *.db-journal
+.electron-data
+*.log
