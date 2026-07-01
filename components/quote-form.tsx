@@ -171,6 +171,9 @@ export function QuoteForm({
       {mode === "quote" ? (
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="mb-4 font-bold text-[#0f2742]">التحكم بما يظهر في الطباعة وملف PDF</h3>
+          <p className="mb-4 text-sm text-slate-500">
+            لعرض قائمة مواد بدون أسعار تفصيلية: أطفئ سعر الوحدة ومجموع كل بند، واترك المجموع النهائي مفعلاً.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <PrintToggle name="showItemPrices" label="إظهار سعر الوحدة" checked={defaults.showItemPrices ?? true} />
             <PrintToggle name="showItemTotals" label="إظهار مجموع كل بند" checked={defaults.showItemTotals ?? true} />

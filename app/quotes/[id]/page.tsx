@@ -20,7 +20,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   ]);
   if (!quote) notFound();
   const sum = totals(quote.items, quote.discount, quote.taxRate, quote.advancePayment);
-  const hideMoney = !quote.showItemPrices && !quote.showItemTotals;
+  const showDetailedMoney = quote.showItemPrices || quote.showItemTotals;
   const quantitySummary = {
     itemLines: quote.items.length,
     totalQuantity: quote.items.reduce((total, item) => total + item.qty, 0)
@@ -28,12 +28,12 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   const pdfTotals: Record<string, string> = {};
   pdfTotals["Item Lines"] = String(quantitySummary.itemLines);
   pdfTotals["Total Qty"] = String(quantitySummary.totalQuantity);
-  if (!hideMoney && quote.showGrandTotal) pdfTotals.Subtotal = formatMoney(sum.subtotal, quote.currency);
-  if (!hideMoney && quote.showDiscount) pdfTotals.Discount = formatMoney(sum.discount, quote.currency);
-  if (!hideMoney && quote.showTax) pdfTotals.Tax = formatMoney(sum.tax, quote.currency);
-  if (!hideMoney && quote.showGrandTotal) pdfTotals.Total = formatMoney(sum.totalSelling, quote.currency);
-  if (!hideMoney && quote.showCostProfit) pdfTotals.Profit = formatMoney(sum.netProfit, quote.currency);
-  if (!hideMoney && quote.showAdvancePayment) pdfTotals.Remaining = formatMoney(sum.remainingBalance, quote.currency);
+  if (showDetailedMoney && quote.showGrandTotal) pdfTotals.Subtotal = formatMoney(sum.subtotal, quote.currency);
+  if (quote.showDiscount) pdfTotals.Discount = formatMoney(sum.discount, quote.currency);
+  if (quote.showTax) pdfTotals.Tax = formatMoney(sum.tax, quote.currency);
+  if (quote.showGrandTotal) pdfTotals.Total = formatMoney(sum.totalSelling, quote.currency);
+  if (quote.showCostProfit) pdfTotals.Profit = formatMoney(sum.netProfit, quote.currency);
+  if (quote.showAdvancePayment) pdfTotals.Remaining = formatMoney(sum.remainingBalance, quote.currency);
   return (
     <>
       <PageHeader
@@ -71,11 +71,12 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         <TotalsBlock
           sum={sum}
           currency={quote.currency}
-          showAdvance={!hideMoney && quote.showAdvancePayment}
-          showDiscount={!hideMoney && quote.showDiscount}
-          showTax={!hideMoney && quote.showTax}
-          showGrandTotal={!hideMoney && quote.showGrandTotal}
-          showCostProfit={!hideMoney && quote.showCostProfit}
+          showSubtotal={showDetailedMoney && quote.showGrandTotal}
+          showAdvance={quote.showAdvancePayment}
+          showDiscount={quote.showDiscount}
+          showTax={quote.showTax}
+          showGrandTotal={quote.showGrandTotal}
+          showCostProfit={quote.showCostProfit}
         />
         {(quote.showPaymentPlan || quote.showTerms) ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -195,6 +196,7 @@ export function QuantitySummary({ itemLines, totalQuantity }: { itemLines: numbe
 export function TotalsBlock({
   sum,
   currency,
+  showSubtotal = true,
   showAdvance = false,
   showDiscount = true,
   showTax = true,
@@ -203,6 +205,7 @@ export function TotalsBlock({
 }: {
   sum: ReturnType<typeof totals>;
   currency: string;
+  showSubtotal?: boolean;
   showAdvance?: boolean;
   showDiscount?: boolean;
   showTax?: boolean;
@@ -211,7 +214,7 @@ export function TotalsBlock({
 }) {
   return (
     <div className="mr-auto mt-6 w-full max-w-md rounded-md border bg-slate-50 p-4 text-sm">
-      {showGrandTotal ? <Row label="Subtotal" value={formatMoney(sum.subtotal, currency)} /> : null}
+      {showSubtotal ? <Row label="Subtotal" value={formatMoney(sum.subtotal, currency)} /> : null}
       {showDiscount ? <Row label="Discount" value={formatMoney(sum.discount, currency)} /> : null}
       {showTax ? <Row label="Tax / VAT" value={formatMoney(sum.tax, currency)} /> : null}
       {showCostProfit ? <Row label="Total Cost" value={formatMoney(sum.totalCost, currency)} /> : null}
