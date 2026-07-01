@@ -1,0 +1,14 @@
+To move Smart Quote to another computer:
+
+1. Copy the full folder:
+   C:\Users\salam\Documents\Codex\2026-05-25\knx-bms-cctv-network-smart-quote
+
+2. Important data lives in:
+   data\smart-quote.db
+   public\uploads
+
+3. On the new computer, open:
+   Open Smart Quote App.cmd
+
+4. To make a backup before moving, run:
+   Backup Smart Quote Data.cmd

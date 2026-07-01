@@ -10,6 +10,8 @@ let serverProcess;
 let mainWindow;
 const logFile = path.join(rootDir, "electron-runtime.log");
 
+fs.mkdirSync(path.join(rootDir, "data"), { recursive: true });
+
 function log(message) {
   fs.appendFileSync(logFile, `${new Date().toISOString()} ${message}\n`);
 }

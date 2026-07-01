@@ -1,7 +1,13 @@
 import { PrismaClient } from "@prisma/client";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.VERCEL ? "file:/tmp/smart-quote-vercel.db" : "file:./dev.db";
+  process.env.DATABASE_URL = process.env.VERCEL ? "file:/tmp/smart-quote-vercel.db" : "file:../data/smart-quote.db";
+}
+
+if (!process.env.VERCEL) {
+  mkdirSync(path.join(process.cwd(), "data"), { recursive: true });
 }
 
 const globalForPrisma = globalThis as unknown as {
