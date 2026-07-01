@@ -10,12 +10,12 @@ import { numberValue, optionalString, requiredString } from "@/lib/actions-utils
 
 async function saveUploadedImage(file: FormDataEntryValue | null) {
   if (!(file instanceof File) || !file.size) return null;
-  const extension = path.extname(file.name) || ".png";
+  const extension = path.extname(file.name).toLowerCase() || ".png";
   const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(process.cwd(), "data", "uploads");
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, safeName), Buffer.from(await file.arrayBuffer()));
-  return `/uploads/${safeName}`;
+  return `/api/uploads/${safeName}`;
 }
 
 export async function saveClient(formData: FormData) {
