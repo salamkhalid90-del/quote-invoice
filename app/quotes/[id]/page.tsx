@@ -20,13 +20,20 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   ]);
   if (!quote) notFound();
   const sum = totals(quote.items, quote.discount, quote.taxRate, quote.advancePayment);
+  const hideMoney = !quote.showItemPrices && !quote.showItemTotals;
+  const quantitySummary = {
+    itemLines: quote.items.length,
+    totalQuantity: quote.items.reduce((total, item) => total + item.qty, 0)
+  };
   const pdfTotals: Record<string, string> = {};
-  if (quote.showGrandTotal) pdfTotals.Subtotal = formatMoney(sum.subtotal, quote.currency);
-  if (quote.showDiscount) pdfTotals.Discount = formatMoney(sum.discount, quote.currency);
-  if (quote.showTax) pdfTotals.Tax = formatMoney(sum.tax, quote.currency);
-  if (quote.showGrandTotal) pdfTotals.Total = formatMoney(sum.totalSelling, quote.currency);
-  if (quote.showCostProfit) pdfTotals.Profit = formatMoney(sum.netProfit, quote.currency);
-  if (quote.showAdvancePayment) pdfTotals.Remaining = formatMoney(sum.remainingBalance, quote.currency);
+  pdfTotals["Item Lines"] = String(quantitySummary.itemLines);
+  pdfTotals["Total Qty"] = String(quantitySummary.totalQuantity);
+  if (!hideMoney && quote.showGrandTotal) pdfTotals.Subtotal = formatMoney(sum.subtotal, quote.currency);
+  if (!hideMoney && quote.showDiscount) pdfTotals.Discount = formatMoney(sum.discount, quote.currency);
+  if (!hideMoney && quote.showTax) pdfTotals.Tax = formatMoney(sum.tax, quote.currency);
+  if (!hideMoney && quote.showGrandTotal) pdfTotals.Total = formatMoney(sum.totalSelling, quote.currency);
+  if (!hideMoney && quote.showCostProfit) pdfTotals.Profit = formatMoney(sum.netProfit, quote.currency);
+  if (!hideMoney && quote.showAdvancePayment) pdfTotals.Remaining = formatMoney(sum.remainingBalance, quote.currency);
   return (
     <>
       <PageHeader
@@ -60,14 +67,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         </div>
         {quote.workDescription ? <p className="mt-4 rounded bg-slate-50 p-3 text-sm">{quote.workDescription}</p> : null}
         <DocumentTable items={quote.items} currency={quote.currency} showPrices={quote.showItemPrices} showItemTotals={quote.showItemTotals} />
+        <QuantitySummary itemLines={quantitySummary.itemLines} totalQuantity={quantitySummary.totalQuantity} />
         <TotalsBlock
           sum={sum}
           currency={quote.currency}
-          showAdvance={quote.showAdvancePayment}
-          showDiscount={quote.showDiscount}
-          showTax={quote.showTax}
-          showGrandTotal={quote.showGrandTotal}
-          showCostProfit={quote.showCostProfit}
+          showAdvance={!hideMoney && quote.showAdvancePayment}
+          showDiscount={!hideMoney && quote.showDiscount}
+          showTax={!hideMoney && quote.showTax}
+          showGrandTotal={!hideMoney && quote.showGrandTotal}
+          showCostProfit={!hideMoney && quote.showCostProfit}
         />
         {(quote.showPaymentPlan || quote.showTerms) ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -165,6 +173,21 @@ export function DocumentTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+export function QuantitySummary({ itemLines, totalQuantity }: { itemLines: number; totalQuantity: number }) {
+  return (
+    <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+      <div className="flex items-center justify-between rounded bg-white px-4 py-3">
+        <span className="text-slate-500">عدد البنود</span>
+        <strong className="text-[#0f2742]">{itemLines}</strong>
+      </div>
+      <div className="flex items-center justify-between rounded bg-white px-4 py-3">
+        <span className="text-slate-500">مجموع الكميات النهائي</span>
+        <strong className="text-[#0f2742]">{totalQuantity}</strong>
+      </div>
     </div>
   );
 }
